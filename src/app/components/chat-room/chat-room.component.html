@@ -1,0 +1,31 @@
+<div class="chat-container">
+
+  <div class="infoAboutUser">
+    <table>
+      <tbody>
+        <td><img class="photoBackAboutUser" [style.background-image]="'url(' + currentSelectedUser.avatar + ')'"> {{currentSelectedUser.fio}} </td>
+        <div class="topMenu">
+          <button class="addChatButton"></button>
+          <button class="setStatus"></button>
+        </div>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="messages" #messagesContainer>
+    <div *ngFor="let message of messages" class="message" [ngClass]="{'own-message': message.user.id === currentUser.id}">
+      <ng-container *ngIf="message.user.id === currentUser.id; else otherUser">
+        {{message.content}} {{formatDate(message.dateOfCreate)}}
+      </ng-container>
+      <ng-template #otherUser>
+        {{formatDate(message.dateOfCreate)}} {{message.content}}
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <input type="text" placeholder="Введите ваше сообщение" [(ngModel)]="newMessage.content">
+    <button (click)="sendMessage()">Отправить</button>
+    <button type="button" (click)="defData()">Прикрепить</button>
+  </div>
+</div>

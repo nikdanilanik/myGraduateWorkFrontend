@@ -1,0 +1,56 @@
+
+<div class="page">
+  <div class="sectionAllBackground">
+    <div class="sectionHead">
+
+      <div class="nameText">
+        <button class="mnbtn" (click)="homeClick()"><h1>Mes</h1></button>
+        <button class="mnbtn" style="right: 15px; position: absolute;" (click)="exitclick()"><h1>Exit</h1></button>
+      </div>
+    </div>
+
+    <div class="mainContainer">
+      <div class="sectionLeft">
+        <div style="margin: 5%;">
+          <div class="infoAboutUser">
+            <table>
+              <tbody>
+                <td><img class="photoBackAboutUser" [style.background-image]="'url(' + currentUser.avatar + ')'"> {{currentUser.fio}} </td>
+                <div class="topMenu">
+                  <button class="addChatButton"></button>
+                  <button class="setStatus"></button>
+                </div>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="allPersons">
+          <div class="allPersonsLeft"
+          infinite-scroll
+          [infiniteScrollDistance]="1"
+          [infiniteScrollUpDistance]="1.5"
+          [infiniteScrollThrottle]="50"
+          (scrolled)="onScrollDown()"
+          (scrolledUp)="onScrollUp()"
+          [scrollWindow]="false">
+          <input type="text" placeholder="Искать...">
+            <div *ngIf="users !== undefined">
+              <app-menu-left-users [users]="users" (userSelected)="handleUserSelected($event)" style="max-height: 100px;"></app-menu-left-users>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sectionRight">
+        <div>
+          <!-- <button (click)="checkMessageWork()">text</button>
+          <button (click)="discronectFromWebSocket()">test disconnect</button> -->
+
+          <app-chat-room [selectedUser]="selectedUser"></app-chat-room>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
