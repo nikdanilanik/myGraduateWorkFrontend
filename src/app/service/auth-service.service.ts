@@ -117,6 +117,7 @@ export class AuthServiceService {
     console.log(logAndPass);
     const userAccessAndPass: UserAccessAndPassword = {
       userAccess: logAndPass,
+
       password: logAndPass.password
     };
     return this.http.post<boolean>(this.usersUrl + '/addLoginAndPass', userAccessAndPass, httpOptions).pipe(
