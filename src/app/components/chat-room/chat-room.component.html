@@ -5,8 +5,8 @@
       <tbody>
         <td><img class="photoBackAboutUser" [style.background-image]="'url(' + currentSelectedUser.avatar + ')'"> {{currentSelectedUser.fio}} </td>
         <div class="topMenu">
-          <button class="addChatButton"></button>
-          <button class="setStatus"></button>
+          <!-- <button class="addChatButton"></button> -->
+          <button class="searchMessage" (click)="openSearchDialog()"></button>
         </div>
       </tbody>
     </table>
@@ -26,6 +26,7 @@
   <div class="input-container">
     <input type="text" placeholder="Введите ваше сообщение" [(ngModel)]="newMessage.content">
     <button (click)="sendMessage()">Отправить</button>
-    <button type="button" (click)="defData()">Прикрепить</button>
+    <button type="button" (click)="fileInput.click()">Прикрепить</button>
+    <input type="file" #fileInput (change)="onFileSelected($event)" style="display:none;">
   </div>
 </div>

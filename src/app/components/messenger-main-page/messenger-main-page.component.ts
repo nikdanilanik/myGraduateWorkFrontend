@@ -1,3 +1,4 @@
+import { ChatRoomDTO } from './../../models/dtoFiles/chatRoomDTO';
 import { MessageService } from 'src/app/service/message.service';
 import { LocalStorageService } from './../../service/local-storage.service';
 import { BaseServiceService } from './../../service/base-service.service';
@@ -17,6 +18,9 @@ import { RxStompService } from 'src/app/service/forWebSocket/rx-stompService';
 import { Subscription } from 'rxjs';
 import { ChatMessage } from 'src/app/models/forMessage/chatMessage';
 import { ChatMessageStatus } from 'src/app/models/forMessage/chatMessageStatus';
+import { ChatRoom } from 'src/app/models/forMessage/chatRoom';
+import { MatDialog } from '@angular/material/dialog';
+import { EditUserDialogComponent } from '../everything-for-users/edit-user-dialog/edit-user-dialog.component';
 
 @Component({
   selector: 'app-messenger-main-page',
@@ -26,10 +30,14 @@ import { ChatMessageStatus } from 'src/app/models/forMessage/chatMessageStatus';
 export class MessengerMainPageComponent implements AfterViewInit, OnInit {
 
   dataSource!: MatTableDataSource<User>;
+  dataSourceDTO!: MatTableDataSource<ChatRoomDTO>;
   filterData!:string;
+  sortData: string = "id, asc";
   displayedColumns: string[] = ['name', 'surname', 'info'];
   currentUser: User = new User();
   users!: User[];
+  chatRoomDTOs!: ChatRoomDTO[];
+  currentOpenWindow: number = 1;
 
   pgIndex= 2;
   totalElementsCount!: number;
@@ -43,6 +51,7 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
   pageSize = 15;
 
   selectedUser: User = new User();
+  selectedChatRoomDTO: ChatRoomDTO = new ChatRoomDTO();
 
   chatMessage: ChatMessage = new ChatMessage();
 
@@ -56,10 +65,10 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
     protected localStorageService: LocalStorageService,
     protected elementRef: ElementRef,
     protected rxStompService: RxStompService,
+    protected messageService: MessageService,
+    protected dialog: MatDialog,
 ) {
   this.localStorageService = new LocalStorageService();
-    // this.baseService.getAllUsers().subscribe(data => this.users = data);
-    // this.currentUser = JSON.parse(localStorage.getItem(UsersUtil.CURRENT_USER) || '{}');
   }
 
   @ViewChild(MatSort) sort!: MatSort;
@@ -68,48 +77,52 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
   ngOnInit(): void {
     this.currentUser.avatar = this.localStorageService.getData(UsersUtil.CURRENT_AVATAR);
     this.currentUser.fio = this.localStorageService.getData(UsersUtil.CURRENT_FIO);
-    // const messageString = JSON.stringify({user: "fio1", type: "join"});
-    // this.rxStompService.publish({ destination: '/app/chat.addUser', body: messageString });
+    this.currentUser.id = Number(this.localStorageService.getData(UsersUtil.USER_ID));
+    this.currentUser.info = this.localStorageService.getData(UsersUtil.CURRENT_INFO);
   }
 
+  // Для дисконекта, если надо
   // discronectFromWebSocket() {
   //   this.rxStompService.deactivate();
   // }
 
-  // checkMessageWork() {
-  //   this.chatMessage.status = ChatMessageStatus.DELIVERED;
+  // Метод для проверки текущего окна
+  checkUsersAndSetWindow(): boolean {
+    if (this.users !== undefined && this.currentOpenWindow == 1) {
+      return true;
+    }
+    return false;
+  }
 
-  //   this.baseService.getOnlyOneUser(1).subscribe(res => {
-  //     this.chatMessage.user = res;
-  //     const chatRoom = {
-  //       id: 16,
-  //       name: "test",
-  //       users: []
-  //     };
-  //     this.chatMessage.chatRoom = chatRoom;
-  //     this.chatMessage.content = "Hello!"
-  //     const messageString = JSON.stringify(this.chatMessage); // Преобразуем объект в JSON строку
-  //     this.rxStompService.publish({ destination: '/app/chat.addUser', body: messageString });
-  //   });
-  // }
-
+  // Первоначальная подгрузка списка юзеров
   ngAfterViewInit() {
     if (!this.prossecingUrl()) {
-
       this.authGuardService.isAuthenticatedAndNavigate();
-      this.baseServiceService.getAllUsers(this.currentPage, this.pageSize, "id, asc").subscribe((usersPage: Page<User>) => {
-        this.dataSource = new MatTableDataSource<User>(usersPage.content);
-        this.users = this.dataSource.data;
-        this.totalElementsCount = usersPage.totalElements;
-        // this.sort.sort({ id: 'id', start: 'asc', disableClear: false });
-        this.dataSource.sort = this.sort;
-      });
+      if (this.currentOpenWindow == 1) {
+        this.baseServiceService.getAllUsers(this.currentPage, this.pageSize, this.sortData, this.filterData).subscribe((usersPage: Page<User>) => {
+          this.dataSource = new MatTableDataSource<User>(usersPage.content);
+          this.users = this.dataSource.data;
+          this.totalElementsCount = usersPage.totalElements;
+          // this.sort.sort({ id: 'id', start: 'asc', disableClear: false });
+          this.dataSource.sort = this.sort;
+        });
+      } else {
+        if (this.currentUser && this.currentUser.id !== null) {
+          this.messageService.getUserChatRoomDTOs(this.currentUser.id).subscribe((data: ChatRoomDTO[]) => {
+            this.dataSourceDTO = new MatTableDataSource<ChatRoomDTO>(data);
+            this.dataSourceDTO.sort = this.sort;
+            this.chatRoomDTOs = data;
+          });
+        } else {
+          console.error('Current user or user ID is not available');
+        }
+      }
     }
   }
 
   onScrollDown() {
     console.log("scrolled down!!");
-    this.baseServiceService.getAllUsers(this.currentPage += 1, this.pageSize, "id, asc").subscribe((usersPage: Page<User>) => {
+    this.baseServiceService.getAllUsers(this.currentPage += 1, this.pageSize, this.sortData, this.filterData).subscribe((usersPage: Page<User>) => {
       // Объединяем содержимое новой страницы пользователей с существующим массивом данных
       this.dataSource.data = this.dataSource.data.concat(usersPage.content);
       this.dataSource = new MatTableDataSource<User>(this.dataSource.data);
@@ -129,19 +142,21 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
     }
   }
 
-  loadMoreUsers() {
-    this.isLoading = true;
-    this.currentPage++;
-    this.baseServiceService.getAllUsers(this.currentPage, this.pageSize, "id, asc").subscribe((usersPage: Page<User>) => {
-      console.log("запуск 2");
-      const newData = new MatTableDataSource<User>();
-      newData.data = usersPage.content;
-      this.dataSource = new MatTableDataSource<User>([...this.dataSource.data, ...newData.data]);
-      this.totalElementsCount = usersPage.totalElements;
-      this.isLoading = false;
-    });
-  }
+  // Вроде как это не нужно
+  // loadMoreUsers() {
+  //   this.isLoading = true;
+  //   this.currentPage++;
+  //   this.baseServiceService.getAllUsers(this.currentPage, this.pageSize, "id, asc").subscribe((usersPage: Page<User>) => {
+  //     console.log("запуск 2");
+  //     const newData = new MatTableDataSource<User>();
+  //     newData.data = usersPage.content;
+  //     this.dataSource = new MatTableDataSource<User>([...this.dataSource.data, ...newData.data]);
+  //     this.totalElementsCount = usersPage.totalElements;
+  //     this.isLoading = false;
+  // }
 
+
+  // Если вдруг захочется добавить какие-то параметры в ссылке на странице
   prossecingUrl() :boolean {
     const thisPageIndex = Number(this.activatedRoute.snapshot.queryParams['thisPageIndex']);
     const thisPageSize  = Number(this.activatedRoute.snapshot.queryParams['thisPageSize']);
@@ -165,6 +180,18 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
 
   handleUserSelected(selectedUser: User) {
     this.selectedUser = selectedUser;
+  }
+  handleChatRoomDTOSelected(selectedChatRoomDTO: ChatRoomDTO) {
+    const userId = Number(localStorage.getItem(UsersUtil.USER_ID));
+    for (let i = 0; i < selectedChatRoomDTO.users.length; i++) {
+      if (selectedChatRoomDTO.users.length == 1) {
+        this.selectedUser = selectedChatRoomDTO.users[i];
+      }
+      if (selectedChatRoomDTO.users[i].id !== userId) {
+        this.selectedUser = selectedChatRoomDTO.users[i];
+      }
+    }
+    return -1;
   }
 
   getDataForPage(page: number, size: number, sort: string, filter?: string ) {
@@ -218,7 +245,10 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
       queryParamsHandling: 'merge'
     });
   }
-
+  chatClick() {
+    this.currentOpenWindow = this.currentOpenWindow === 0 ? 1 : 0;
+    this.ngAfterViewInit();
+  }
   homeClick() {
     this.router.navigateByUrl(UrlPathUtil.HOME);
   }
@@ -226,5 +256,18 @@ export class MessengerMainPageComponent implements AfterViewInit, OnInit {
     this.router.navigateByUrl(UrlPathUtil.LOGIN);
     localStorage.clear();
   }
-}
+  // Кнопка для редактирования пользовательских данных
+  changeUserInfo(user: User): void {
+    const dialogRef = this.dialog.open(EditUserDialogComponent, {
+      width: '400px',
+      data: user
+    });
 
+    dialogRef.afterClosed().subscribe((result: User) => {
+      if (result) {
+        this.baseService.updateUser(result).subscribe(updatedUser => {
+        });
+      }
+    });
+  }
+}

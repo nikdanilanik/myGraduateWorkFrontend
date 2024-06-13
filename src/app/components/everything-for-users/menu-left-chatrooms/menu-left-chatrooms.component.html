@@ -1,0 +1,10 @@
+<mat-card *ngFor="let chatRoomDTO of chatRoomDTOs" class="example-card" (click)="onSelectChatRoom(chatRoomDTO)" style="margin-bottom: 1%;">
+  <mat-card-header style="padding: 6px; height: 44px;">
+    <div mat-card-avatar class="example-header-image" [ngStyle]="{'background-image': 'url(' + getAvatar(chatRoomDTO) + ')'}"></div>
+    <mat-card-title style="color: black;">{{ getUserFullName(chatRoomDTO) }}</mat-card-title>
+    <mat-card-subtitle>{{ getLastSeen(chatRoomDTO) | timeAgo }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content style="color: black; padding: 8px 16px;">
+    <p>{{ chatRoomDTO.lastMessage?.content }}</p>
+  </mat-card-content>
+</mat-card>

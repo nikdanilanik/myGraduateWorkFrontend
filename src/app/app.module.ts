@@ -24,6 +24,11 @@ import { InfiniteScrollModule } from 'ngx-infinite-scroll';
 import { rxStompServiceFactory } from './service/forWebSocket/rxStompServiceFactory';
 import { RxStompService } from './service/forWebSocket/rx-stompService';
 import { ChatRoomComponent } from './components/chat-room/chat-room.component';
+import { SearchDialogComponent } from './components/everything-for-users/search-dialog/search-dialog.component';
+import { MatIconModule } from '@angular/material/icon';
+import { TimeAgoPipe } from './service/time-ago.pipe';
+import { MenuLeftChatroomsComponent } from './components/everything-for-users/menu-left-chatrooms/menu-left-chatrooms.component';
+import { EditUserDialogComponent } from './components/everything-for-users/edit-user-dialog/edit-user-dialog.component';
 
 
 @NgModule({
@@ -36,6 +41,10 @@ import { ChatRoomComponent } from './components/chat-room/chat-room.component';
     MessengerMainPageComponent,
     MenuLeftUsersComponent,
     ChatRoomComponent,
+    SearchDialogComponent,
+    TimeAgoPipe,
+    MenuLeftChatroomsComponent,
+    EditUserDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -46,6 +55,7 @@ import { ChatRoomComponent } from './components/chat-room/chat-room.component';
     MatFormFieldModule,
     MatInputModule,
     HttpClientModule,
+    ReactiveFormsModule,
     // HttpClientInMemoryWebApiModule.forRoot( InMemoryDataComponent, { dataEncapsulation: false }),
     MatTableModule,
     MatSortModule,
@@ -55,6 +65,7 @@ import { ChatRoomComponent } from './components/chat-room/chat-room.component';
     MatButtonModule,
     MatCardModule,
     InfiniteScrollModule,
+    MatIconModule,
   ],
   providers: [{
     provide: RxStompService,

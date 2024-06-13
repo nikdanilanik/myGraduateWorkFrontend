@@ -17,8 +17,8 @@
               <tbody>
                 <td><img class="photoBackAboutUser" [style.background-image]="'url(' + currentUser.avatar + ')'"> {{currentUser.fio}} </td>
                 <div class="topMenu">
-                  <button class="addChatButton"></button>
-                  <button class="setStatus"></button>
+                  <button class="addChatButton" (click)="chatClick()"></button>
+                  <button class="setStatus" (click)="changeUserInfo(currentUser)"></button>
                 </div>
               </tbody>
             </table>
@@ -33,10 +33,15 @@
           (scrolled)="onScrollDown()"
           (scrolledUp)="onScrollUp()"
           [scrollWindow]="false">
-          <input type="text" placeholder="Искать...">
-            <div *ngIf="users !== undefined">
-              <app-menu-left-users [users]="users" (userSelected)="handleUserSelected($event)" style="max-height: 100px;"></app-menu-left-users>
-            </div>
+          <input type="text" placeholder="Искать..." [(ngModel)]="filterData" (keydown.enter)="ngAfterViewInit()">
+
+          <div *ngIf="checkUsersAndSetWindow(); else elseBlock">
+            <app-menu-left-users [users]="users" (userSelected)="handleUserSelected($event)" style="max-height: 100px;"></app-menu-left-users>
+          </div>
+          <ng-template #elseBlock>
+            <app-menu-left-chatrooms [chatRoomDTOs]="chatRoomDTOs" (chatRoomDTOSelected)="handleChatRoomDTOSelected($event)" style="max-height: 100px;"></app-menu-left-chatrooms>
+          </ng-template>
+
           </div>
         </div>
       </div>

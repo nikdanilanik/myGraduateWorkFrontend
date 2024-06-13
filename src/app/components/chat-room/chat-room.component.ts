@@ -1,6 +1,6 @@
 import { AfterViewChecked, AfterViewInit, Component, ElementRef, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { map, timeout, toArray } from 'rxjs';
-import { ChatMessage, ChatMessageDTO } from 'src/app/models/forMessage/chatMessage';
+import { ChatMessage } from 'src/app/models/forMessage/chatMessage';
 import { ChatMessageStatus } from 'src/app/models/forMessage/chatMessageStatus';
 import { ChatRoom } from 'src/app/models/forMessage/chatRoom';
 import { Page } from 'src/app/models/page';
@@ -8,6 +8,10 @@ import { User } from 'src/app/models/user';
 import { RxStompService } from 'src/app/service/forWebSocket/rx-stompService';
 import { MessageService } from 'src/app/service/message.service';
 import { UsersUtil } from 'src/app/utils/users-util';
+import { SearchDialogComponent } from '../everything-for-users/search-dialog/search-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ChatMessageDTO } from 'src/app/models/dtoFiles/ChatMessageDTO';
+import { BaseServiceService } from 'src/app/service/base-service.service';
 
 @Component({
   selector: 'app-chat-room',
@@ -15,6 +19,7 @@ import { UsersUtil } from 'src/app/utils/users-util';
   styleUrls: ['./chat-room.component.css', '../messenger-main-page/messenger-main-page.component.css']
 })
 export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
+  selectedFile: File | null = null;
   currentSelectedUser = new User();
   currentUserString = localStorage.getItem(UsersUtil.CURRENT_USER);
   currentUser : User = this.currentUserString ? JSON.parse(this.currentUserString):0;
@@ -22,11 +27,12 @@ export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
   isLoading: boolean = false;
   totalElements: number = 0;
   pageSize: number = 30;
-  currentPage: number = 0;
+  currentPage: number = 1;
   totalPages: number = 0;
   first: boolean = false;
   last: boolean = false;
   searhText: string = "";
+  sortData: string = "id,desc";
 
   @Input()
   set selectedUser(value: User) {
@@ -41,28 +47,63 @@ export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
 
   constructor(private messageService: MessageService,
     private rxStompService: RxStompService,
+    private matDialog: MatDialog,
+    private baseService: BaseServiceService,
   ) {}
 
+  // Выгрузка всех сообщений
   loadMessages(): void {
     if (this.currentUser && this.currentChatRoom) {
-      this.messageService.searchMessages(
-        this.currentPage,
-        this.pageSize,
-        this.currentChatRoom.id!,
-        this.searhText
-      ).subscribe({
-        next: (page: Page<ChatMessageDTO>) => {
-          this.messages = page.content.map(ChatMessage.mapChatMessageDTOToChatMessage);
-          this.totalElements = page.totalElements;
-          this.totalPages = page.totalPages;
-          this.first = page.first;
-          this.last = page.last;
-        },
-        error: (err: any) => console.error(err)
-      });
+      this.getTotalPagesAndLoadMessages();
     } else {
       console.error('User or Chat Room is not set');
     }
+  }
+
+  // получение инфы о сообщениях (кол-во)
+  getTotalPagesAndLoadMessages(): void {
+    this.sortData = "id,desc";
+
+    this.messageService.searchMessages(
+      this.currentPage,
+      this.pageSize,
+      this.sortData,
+      this.currentChatRoom.id!,
+      this.searhText
+    ).subscribe({
+
+      next: (page: Page<ChatMessageDTO>) => {
+        this.totalElements = page.totalElements;
+
+        this.currentPage = this.totalPages;
+
+        this.loadLastMessages();
+      },
+      error: (err: any) => console.error(err)
+    });
+  }
+
+  // сама выгрузка сообщений
+  loadLastMessages(): void {
+    this.messageService.searchMessages(
+      this.currentPage,
+      this.pageSize,
+      this.sortData,
+      this.currentChatRoom.id!,
+      this.searhText
+    ).subscribe({
+      next: (finalPage: Page<ChatMessageDTO>) => {
+        this.messages = finalPage.content
+          .map(ChatMessage.mapChatMessageDTOToChatMessage)
+          .sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+
+        this.totalElements = finalPage.totalElements;
+        this.totalPages = finalPage.totalPages;
+        this.first = finalPage.first;
+        this.last = finalPage.last;
+      },
+      error: (err: any) => console.error(err)
+    });
   }
 
   onPageChange(page: number): void {
@@ -118,6 +159,20 @@ export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
     }
   }
 
+  // Вызов окна для поиска по сообщениям
+  openSearchDialog(): void {
+    const dialogRef = this.matDialog.open(SearchDialogComponent, {
+      width: '450px',
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.searhText = result;
+        this.loadMessages();
+      }
+    });
+  }
+
   // async delay(ms: number) {
   //   return new Promise(resolve => setTimeout(resolve, ms));
   // }
@@ -138,6 +193,7 @@ export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
     }
   }
 
+  // Отправка сообщений
   sendMessage(): void {
     if (this.newMessage.content.trim() != '') {
       this.newMessage.user = this.currentUser;
@@ -148,10 +204,23 @@ export class ChatRoomComponent implements AfterViewChecked, AfterViewInit {
       this.scrollToBottom();
     }
   }
-  defData() {
-    console.log("test");
+
+  // прикрепление файла
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedFile = input.files[0];
+      console.log('Selected file:', this.selectedFile.name);
+    }
+  }
+  attach() {
+    if (this.selectedFile) {
+      // Логика отправки файла на сервер
+      this.baseService.uploadFile(this.selectedFile);
+    }
   }
 
+  // Метод для времени и даты к сообщениям
   formatDate(date: Date | null): string {
     if (!date) {
       return '';

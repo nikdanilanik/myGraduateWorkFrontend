@@ -28,8 +28,8 @@ export class AuthServiceService {
       this.baseService.getOnlyOneUser(Number(localStorage.getItem(UsersUtil.USER_ID))).subscribe(dataInfo => {
         localStorage.setItem(UsersUtil.CURRENT_FIO, dataInfo.fio);
         localStorage.setItem(UsersUtil.CURRENT_AVATAR, dataInfo.avatar);
+        this.authGuardService.isAuthenticatedAndNavigate();
       });
-      this.authGuardService.isAuthenticatedAndNavigate();
     });
   }
 
@@ -52,6 +52,7 @@ export class AuthServiceService {
 
         this.baseService.getOnlyOneUser(data.details.user_id).subscribe(result => {
           localStorage.setItem(UsersUtil.CURRENT_USER, JSON.stringify(result));
+          localStorage.setItem(UsersUtil.CURRENT_INFO, result.info);
         })
         return JSON.stringify(data);
       }),
@@ -168,5 +169,4 @@ export class AuthServiceService {
       })
     );
   }
-
 }

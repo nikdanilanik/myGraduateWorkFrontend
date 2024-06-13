@@ -1,3 +1,4 @@
+import { ChatMessageDTO } from '../dtoFiles/ChatMessageDTO';
 import { User } from './../user';
 import { ChatMessageStatus } from './chatMessageStatus';
 import { ChatRoom } from './chatRoom';
@@ -28,13 +29,4 @@ export class ChatMessage {
     chatMessage.chatRoom = new ChatRoom(dto.chatRoomId);
     return chatMessage;
   }
-}
-
-export interface ChatMessageDTO {
-  id: number;
-  content: string;
-  dateOfCreate: Date;
-  status: ChatMessageStatus;
-  userId: number;
-  chatRoomId: number;
 }

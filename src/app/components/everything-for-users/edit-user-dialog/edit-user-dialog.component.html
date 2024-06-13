@@ -1,0 +1,21 @@
+<h2 mat-dialog-title>Редактировать пользователя</h2>
+<mat-dialog-content>
+  <form [formGroup]="editUserForm">
+    <mat-form-field>
+      <mat-label>ФИО</mat-label>
+      <input matInput formControlName="fio">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Информация</mat-label>
+      <textarea matInput formControlName="info" rows="5"></textarea>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Аватар</mat-label>
+      <input matInput formControlName="avatar">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Назад</button>
+  <button mat-button (click)="onSave()" cdkFocusInitial>Сохранить</button>
+</mat-dialog-actions>

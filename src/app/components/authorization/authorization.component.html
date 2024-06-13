@@ -8,23 +8,23 @@
           Авторизация
         </span>
 
-          <div class="wrap-input100 validate-input" data-validate="Enter username">
-            <input matInput class="input100" type="text" placeholder="Логин"
-              [(ngModel)]="autoriz.login" [ngModelOptions]="{standalone: true}" required>
-            <span class="focus-input100" data-placeholder=""></span>
-          </div>
+        <div class="wrap-input100 validate-input" data-validate="Enter username">
+          <input matInput class="input100" type="text" placeholder="Логин"
+            [(ngModel)]="autoriz.login" [ngModelOptions]="{standalone: true}" required (keydown.enter)="auth()">
+          <span class="focus-input100" data-placeholder=""></span>
+        </div>
 
-          <div class="wrap-input100 validate-input" data-validate="Enter password">
-            <input matInput class="input100" type="password" placeholder="Пароль"
-              [(ngModel)]="autoriz.password" [ngModelOptions]="{standalone: true}" required>
-            <span class="focus-input100" data-placeholder=""></span>
-          </div>
+        <div class="wrap-input100 validate-input" data-validate="Enter password">
+          <input matInput class="input100" type="password" placeholder="Пароль"
+            [(ngModel)]="autoriz.password" [ngModelOptions]="{standalone: true}" required (keydown.enter)="auth()">
+          <span class="focus-input100" data-placeholder=""></span>
+        </div>
 
         <div class="container-login100-form-btn">
           <button type="button" class="login100-form-btn" (click)="homeClick()">
             Вернуться назад
           </button>
-          <button class="login100-form-btn" (click)="auth()">
+          <button type="button" class="login100-form-btn" (click)="auth()">
             Авторизоваться
           </button>
         </div>

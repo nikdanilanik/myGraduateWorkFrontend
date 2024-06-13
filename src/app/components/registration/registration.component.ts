@@ -43,13 +43,8 @@ export class RegistrationComponent {
       duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom' });
     }
     else {
-      // с регистрацией что-то не то
-      // как минимум, нужно проверить на "реально ли оно создаёт"
-      // и как-то обработать результат
       this.userLoginAndPass.userId;
       this.authService.registrSetDetails(this.user, this.userLoginAndPass);
     }
   }
-
-  ngOnInit() {}
 }

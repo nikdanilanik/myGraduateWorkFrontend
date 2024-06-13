@@ -38,18 +38,6 @@ export class AuthorizationComponent {
     }
     else {
       this.authService.auth(window.btoa(this.autoriz.login + ":" + this.autoriz.password));
-      // this.baseService.getAllUsers().subscribe(data => {
-      //   data.forEach(element => {
-      //     if (this.autoriz.login == element.logAndPass.login) {
-      //       if (this.autoriz.password == element.logAndPass.password) {
-      //         this.router.navigateByUrl(UrlPathUtil.MESSENGE);
-      //         localStorage.setItem(UsersUtil.CURRENT_USER, JSON.stringify(element));
-      //       }
-      //     }
-      //   });
-      // });
     }
   }
-
-  ngOnInit() {}
 }

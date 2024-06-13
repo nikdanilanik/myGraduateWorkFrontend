@@ -7,8 +7,10 @@ import { Router } from '@angular/router';
 import { User } from '../models/user';
 import { UsersUtil } from '../utils/users-util';
 import { UrlPathUtil } from '../utils/url-path-util';
-import { ChatMessage, ChatMessageDTO } from '../models/forMessage/chatMessage';
+import { ChatMessage } from '../models/forMessage/chatMessage';
 import { Page } from '../models/page';
+import { ChatRoomDTO } from '../models/dtoFiles/chatRoomDTO';
+import { ChatMessageDTO } from '../models/dtoFiles/ChatMessageDTO';
 
 @Injectable({
   providedIn: 'root'
@@ -63,6 +65,7 @@ export class MessageService {
   searchMessages(
     page: number,
     size: number,
+    sort: string,
     chatRoomId: number,
     searchText?: string
   ): Observable<Page<ChatMessageDTO>> {
@@ -70,7 +73,9 @@ export class MessageService {
       .set('page', page.toString())
       .set('size', size.toString())
       .set('chatRoomId', chatRoomId.toString());
-
+    if (sort) {
+      params = params.set("sort", sort);
+    }
     if (searchText) {
       params = params.set('searchText', searchText);
     }
@@ -82,6 +87,23 @@ export class MessageService {
       catchError((error: HttpErrorResponse) => {
         return throwError(() => error);
       })
+    );
+  }
+
+  getUserChatRoomDTOs(userId: number): Observable<ChatRoomDTO[]> {
+    const params = new HttpParams().set('userId', userId.toString());
+    return this.http.get<ChatRoomDTO[]>(this.chatUrl + 'chatRoomDTOs', { params }).pipe(
+        map(data => data),
+        catchError((error: HttpErrorResponse) => {
+            if (error.status === 401) {
+                localStorage.removeItem('CURRENT_USER');
+                this.router.navigateByUrl('/login');
+                this.matSnackBar.open('Ошибка входа. Пожалуйста, повторите авторизацию', 'Закрыть', {
+                    duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom'
+                });
+            }
+            return throwError(() => error);
+        })
     );
   }
 }

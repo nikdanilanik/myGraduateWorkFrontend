@@ -68,6 +68,26 @@ export class BaseServiceService {
     );
   }
 
+  updateUser(user: User): Observable<User> {
+    const url = `${this.usersUrl}/update`;
+    return this.http.put<User>(url, user).pipe(
+      catchError((error: HttpErrorResponse) => {
+        if(error.status === 401) {
+          localStorage.removeItem(UsersUtil.CURRENT_USER);
+          this.router.navigateByUrl(UrlPathUtil.LOGIN);
+          this.matSnackBar.open('Ошибка входа. Пожалуйста, повторите авторизацию', 'Закрыть', {
+            duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom' });
+        }
+        return throwError(() => error);
+      }),
+      map((data:User) => {
+        localStorage.setItem(UsersUtil.CURRENT_USER, JSON.stringify(data));
+        localStorage.setItem(UsersUtil.CURRENT_INFO, data.info);
+        return data;
+      })
+    )
+  }
+
   getOnlyOneUser(id: number) : Observable<User>{
     const httpOptions = {
       headers: new HttpHeaders({
@@ -91,31 +111,16 @@ export class BaseServiceService {
     );
   }
 
-  // getGroupById(id: number) : Observable<Group>{
-  //   // Возвращаем фулл данные о студенте
-  //   const httpOptions = {
-  //     headers: new HttpHeaders({
-  //       'Content-Type':  'application/json'
-  //     })
-  //   };
-  //   return this.http.get<Group>(`${this.groupsUrl}/${id}`, httpOptions).pipe(
-  //     catchError((error: HttpErrorResponse) => {
-  //       if(error.status === 401) {
-  //         localStorage.removeItem(UsersUtil.CURRENT_USER);
-  //         this.router.navigateByUrl(UrlPathUtil.LOGIN);
-  //         this.matSnackBar.open('Ошибка входа. Пожалуйста, повторите авторизацию', 'Закрыть', {
-  //           duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom' });
-  //       }
-  //       if (error.status === 500) {
-  //         this.matSnackBar.open('Такого номера группы не существует', 'Закрыть', {
-  //           duration: 5000, horizontalPosition: 'center', verticalPosition: 'bottom' });
-  //       }
-  //       return throwError(() => error);
-  //     }),
-  //     map((data:Group) => {
-  //       return data;
-  //     })
-  //   );
-  // }
+  // загрузка файлов
+  uploadFile(file: File) {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
 
+    // Используйте HttpClient для отправки запроса
+    this.http.post('api/base/upload', formData).subscribe(response => {
+      console.log('File uploaded successfully', response);
+    }, error => {
+      console.error('File upload failed', error);
+    });
+  }
 }

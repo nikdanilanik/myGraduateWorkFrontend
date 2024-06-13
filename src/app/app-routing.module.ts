@@ -13,13 +13,8 @@ const routes: Routes = [
   { path: 'login',            component: AuthorizationComponent },
   { path: 'registr',          component: RegistrationComponent },
   { path: 'messenge',         component: MessengerMainPageComponent, canActivate: [AuthGuardService] },
-  // { path: 'table-student',    component: StudentTableComponent,   canActivate: [AuthGuardService] },
-  // { path: 'table-admin',      component: AdminTableComponent,     canActivate: [AuthGuardService] },
-  // { path: 'table-teacher',    component: TeacherTableComponent,   canActivate: [AuthGuardService] },
-  // { path: 'personal-page',    component: PersonalTableComponent,  canActivate: [AuthGuardService] },
   { path: '',                 redirectTo: 'home', pathMatch: 'full' },
   { path: '**',               component: PageNotFoundComponent },
-
 
 ];
 
